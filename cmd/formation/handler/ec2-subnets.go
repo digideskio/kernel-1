@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"strconv"
 
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/aws"
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/service/ec2"
@@ -51,6 +52,7 @@ func EC2SubnetsCreate(req Request) (string, map[string]interface{}, error) {
 	outputs := make(map[string]interface{})
 	subnets := make([]string, 0, 100)
 	azs := make([]string, 0, 100)
+
 	for i, az := range matches {
 		res, err := EC2(req).CreateSubnet(&ec2.CreateSubnetInput{
 			AvailabilityZone: aws.String(az),
@@ -64,6 +66,15 @@ func EC2SubnetsCreate(req Request) (string, map[string]interface{}, error) {
 
 		subnets = append(subnets, *res.Subnet.SubnetID)
 		azs = append(azs, az)
+		outputs["SubnetId" + strconv.Itoa(i)] = *res.Subnet.SubnetID
+	}
+
+	for i := 0; i < 10; i++ {
+		// Cloudformation makes it hard to deal with a variable number of returned elements
+		// This is a workaround to always send back 10 subnets, the template then lists SubnetId0-9 and cloudformation handles duplicates
+		if outputs["SubnetId" + strconv.Itoa(i)] == nil {
+			outputs["SubnetId" + strconv.Itoa(i)] = outputs["SubnetId0"]
+		}
 	}
 
 	outputs["SubnetIds"] = subnets

@@ -73,7 +73,7 @@
     },
     "Subnets": {
       "Condition": "Development",
-      "Value": { "Fn::Join": [ ",", [ { "Ref": "Subnet0" }, { "Ref": "Subnet1" }, { "Ref": "Subnet2" } ] ] }
+      "Value": { "Fn::GetAtt": [ "Subnets", "SubnetIdsString" ] }
     },
     "Vpc": {
       "Condition": "Development",
@@ -271,31 +271,12 @@
         "VpcId": { "Ref": "Vpc" }
       }
     },
-    "Subnet0": {
-      "DependsOn": [ "AvailabilityZones", "Vpc" ],
-      "Type": "AWS::EC2::Subnet",
+    "Subnets": {
+      "Type": "Custom::EC2Subnets",
       "Properties": {
-        "AvailabilityZone": { "Fn::GetAtt": [ "AvailabilityZones", "AvailabilityZone0" ] },
-        "CidrBlock": "10.0.1.0/24",
-        "VpcId": { "Ref": "Vpc" }
-      }
-    },
-    "Subnet1": {
-      "DependsOn": [ "AvailabilityZones", "Vpc" ],
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "AvailabilityZone": { "Fn::GetAtt": [ "AvailabilityZones", "AvailabilityZone1" ] },
-        "CidrBlock": "10.0.2.0/24",
-        "VpcId": { "Ref": "Vpc" }
-      }
-    },
-    "Subnet2": {
-      "DependsOn": [ "AvailabilityZones", "Vpc" ],
-      "Type": "AWS::EC2::Subnet",
-      "Properties": {
-        "AvailabilityZone": { "Fn::GetAtt": [ "AvailabilityZones", "AvailabilityZone2" ] },
-        "CidrBlock": "10.0.3.0/24",
-        "VpcId": { "Ref": "Vpc" }
+        "ServiceToken": { "Ref": "CustomTopic" },
+        "Region": { "Ref": "AWS::Region" },
+        "Vpc": { "Ref": "Vpc" }
       }
     },
     "Routes": {
@@ -314,28 +295,14 @@
         "RouteTableId": { "Ref": "Routes" }
       }
     },
-    "Subnet0Routes": {
-      "DependsOn": [ "Subnet0", "Routes" ],
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    "SubnetRoutes": {
+      "Type": "Custom::EC2SubnetRouteTableAssociation",
       "Properties": {
-        "SubnetId": { "Ref": "Subnet0" },
-        "RouteTableId": { "Ref": "Routes" }
-      }
-    },
-    "Subnet1Routes": {
-      "DependsOn": [ "Subnet1", "Routes" ],
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": { "Ref": "Subnet1" },
-        "RouteTableId": { "Ref": "Routes" }
-      }
-    },
-    "Subnet2Routes": {
-      "DependsOn": [ "Subnet2", "Routes" ],
-      "Type": "AWS::EC2::SubnetRouteTableAssociation",
-      "Properties": {
-        "SubnetId": { "Ref": "Subnet2" },
-        "RouteTableId": { "Ref": "Routes" }
+        "ServiceToken": { "Ref": "CustomTopic" },
+        "SubnetIds": { "Fn::GetAtt": [ "Subnets", "SubnetIdsString" ] },
+        "RouteTableId": { "Ref": "Routes" },
+        "Region": { "Ref": "AWS::Region" },
+        "Vpc": { "Ref": "Vpc" }
       }
     },
     "SecurityGroup": {
@@ -445,15 +412,17 @@
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "LaunchConfigurationName" : { "Ref": "LaunchConfiguration" },
-        "AvailabilityZones": [
-          { "Fn::GetAtt": [ "AvailabilityZones", "AvailabilityZone0" ] },
-          { "Fn::GetAtt": [ "AvailabilityZones", "AvailabilityZone1" ] },
-          { "Fn::GetAtt": [ "AvailabilityZones", "AvailabilityZone2" ] }
-        ],
         "VPCZoneIdentifier": [
-          { "Ref": "Subnet0" },
-          { "Ref": "Subnet1" },
-          { "Ref": "Subnet2" }
+          { "Fn::GetAtt": [ "Subnets", "SubnetId0" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId1" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId2" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId3" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId4" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId5" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId6" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId7" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId8" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId9" ] }
         ],
         "Cooldown": 5,
         "DesiredCapacity": { "Ref": "InstanceCount" },
@@ -591,9 +560,16 @@
           }
         ],
         "Subnets": [
-          { "Ref": "Subnet0" },
-          { "Ref": "Subnet1" },
-          { "Ref": "Subnet2" }
+          { "Fn::GetAtt": [ "Subnets", "SubnetId0" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId1" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId2" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId3" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId4" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId5" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId6" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId7" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId8" ] },
+          { "Fn::GetAtt": [ "Subnets", "SubnetId9" ] }
         ]
       },
       "Type": "AWS::ElasticLoadBalancing::LoadBalancer"
@@ -798,7 +774,7 @@
               ] },
               "RELEASE": { "Ref": "Version" },
               "ROLLBAR_TOKEN": "f67f25b8a9024d5690f997bd86bf14b0",
-              "SUBNETS": { "Fn::Join": [ ",", [ { "Ref": "Subnet0" }, { "Ref": "Subnet1" }, { "Ref": "Subnet2" } ] ] },
+              "SUBNETS": { "Fn::GetAtt": [ "Subnets", "SubnetIdsString" ] },
               "VPC": { "Ref": "Vpc" }
             },
             "Image": { "Fn::Join": [ ":", [ "convox/kernel", { "Ref": "Version" } ] ] },
