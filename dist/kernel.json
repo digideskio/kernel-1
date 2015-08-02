@@ -36,7 +36,7 @@
     },
     "CustomTopic": {
       "Condition": "Development",
-      "Value": { "Fn::GetAtt": [ "CustomTopic", "Arn" ] }
+      "Value": { "Ref": "CustomTopic" }
     },
     "Dashboard": {
       "Value": { "Fn::GetAtt": [ "Balancer", "DNSName" ] }
@@ -143,15 +143,21 @@
       "Description": "Dedicated Hardware",
       "Default": "default",
       "AllowedValues": [ "default", "dedicated" ]
+    },
+    "CustomTopic" : {
+      "Type": "String",
+      "Description": "Custom Resource Bridge ARN (Lambda or SNS)",
+      "AllowedPattern": "arn:aws:.*",
+      "ConstraintDescription": "must be an ARN"
     }
   },
   "Resources": {
     "EncryptionKey": {
-      "DependsOn": "CustomTopic",
       "Type": "Custom::KMSKey",
       "Properties": {
-        "ServiceToken": { "Fn::GetAtt": [ "CustomTopic", "Arn" ] },
+        "ServiceToken": { "Ref": "CustomTopic" },
         "Description": "Convox Master Encryption",
+        "Region": { "Ref": "AWS::Region" },
         "KeyUsage": "ENCRYPT_DECRYPT"
       }
     },
@@ -207,53 +213,12 @@
       },
       "Type": "AWS::IAM::User"
     },
-    "CustomTopicRole": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": { "Service": [ "lambda.amazonaws.com" ] },
-              "Action": [ "sts:AssumeRole" ]
-            }
-          ]
-        },
-        "Path": "/",
-        "Policies": [
-          {
-            "PolicyName": "Administrator",
-            "PolicyDocument": {
-              "Version": "2012-10-17",
-              "Statement": [
-                { "Effect": "Allow", "Action": "*", "Resource": "*" },
-                { "Effect": "Deny", "Action": "s3:DeleteObject", "Resource": "*" }
-              ]
-            }
-          }
-        ]
-      }
-    },
-    "CustomTopic": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": { "Fn::Join": [ "-", [ "convox", { "Ref": "AWS::Region" } ] ] },
-          "S3Key": { "Fn::Join": [ "", [ "release/", { "Ref": "Version" }, "/formation.zip" ] ] }
-        },
-        "Handler": "lambda.external",
-        "MemorySize": "128",
-        "Role": { "Fn::GetAtt": [ "CustomTopicRole", "Arn" ] },
-        "Runtime": "nodejs",
-        "Timeout": "30"
-      }
-    },
     "AvailabilityZones": {
       "DependsOn": [ "CustomTopic", "Vpc" ],
       "Type": "Custom::EC2AvailabilityZones",
       "Properties": {
-        "ServiceToken": { "Fn::GetAtt": [ "CustomTopic", "Arn" ] },
+        "ServiceToken": { "Ref": "CustomTopic" },
+        "Region": { "Ref": "AWS::Region" },
         "Vpc": { "Ref": "Vpc" }
       }
     },
@@ -524,6 +489,14 @@
         "AccessControl": "Private"
       }
     },
+    "RegistryBucketCleanup": {
+      "Type": "Custom::S3BucketCleanup",
+      "Properties": {
+        "Bucket": { "Ref": "RegistryBucket" },
+        "Region": { "Ref": "AWS::Region" },
+        "ServiceToken": { "Ref": "CustomTopic" }
+      }
+    },
     "RegistryUser": {
       "Type": "AWS::IAM::User",
       "Properties": {
@@ -670,7 +643,7 @@
       "Type": "Custom::ECSService",
       "Version": "1.0",
       "Properties": {
-        "ServiceToken": { "Fn::GetAtt": [ "CustomTopic", "Arn" ] },
+        "ServiceToken": { "Ref": "CustomTopic" },
         "Cluster": { "Ref": "Cluster" },
         "DesiredCount": "1",
         "LoadBalancers": [
@@ -680,6 +653,7 @@
         ],
         "Name": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "kernel" ] ] },
         "Role": { "Ref": "ServiceRole" },
+        "Region": { "Ref": "AWS::Region" },
         "TaskDefinition": { "Ref": "KernelTasks" }
       }
     },
@@ -784,13 +758,22 @@
       "DeletionPolicy": "Retain",
       "Type": "AWS::S3::Bucket"
     },
+    "SettingsCleanup": {
+      "Type": "Custom::S3BucketCleanup",
+      "Properties": {
+        "Bucket": { "Ref": "Settings" },
+        "Region": { "Ref": "AWS::Region" },
+        "ServiceToken": { "Ref": "CustomTopic" }
+      }
+    },
     "KernelTasks": {
       "DependsOn": [ "Balancer", "Cluster", "CustomTopic", "DynamoBuilds", "DynamoReleases", "EncryptionKey", "KernelAccess", "Kinesis", "RegistryAccess", "RegistryBucket", "Subnet0", "Subnet1", "Subnet2", "Vpc" ],
       "Properties": {
         "Name": {
           "Ref": "AWS::StackName"
         },
-        "ServiceToken": { "Fn::GetAtt": [ "CustomTopic", "Arn" ] },
+        "ServiceToken": { "Ref": "CustomTopic" },
+        "Region": { "Ref": "AWS::Region" },
         "Tasks": [
           {
             "CPU": "100",
@@ -799,7 +782,7 @@
               "AWS_ACCESS": { "Ref": "KernelAccess" },
               "AWS_SECRET": { "Fn::GetAtt": [ "KernelAccess", "SecretAccessKey" ] },
               "CLIENT_ID": { "Ref": "ClientId" },
-              "CUSTOM_TOPIC": { "Fn::GetAtt": [ "CustomTopic", "Arn" ] },
+              "CUSTOM_TOPIC": { "Ref": "CustomTopic" },
               "CLUSTER": { "Ref": "Cluster" },
               "DYNAMO_BUILDS": { "Ref": "DynamoBuilds" },
               "DYNAMO_RELEASES": { "Ref": "DynamoReleases" },
