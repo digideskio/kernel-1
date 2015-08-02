@@ -5,8 +5,11 @@ import (
 	"regexp"
 	"strings"
 	"strconv"
+	"time"
+	"os"
 
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/aws"
+	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/aws/awserr"
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/service/ec2"
 )
 
@@ -108,12 +111,27 @@ func EC2SubnetsDelete(req Request) (string, map[string]interface{}, error) {
 	}
 
 	for _, r := range res.Subnets {
-		_, err := EC2(req).DeleteSubnet(&ec2.DeleteSubnetInput{
-			SubnetID: aws.String(*r.SubnetID),
-		})
+		for {
+			fmt.Fprintf(os.Stderr, "deleting: %s\n", *r.SubnetID)
+			_, err := EC2(req).DeleteSubnet(&ec2.DeleteSubnetInput{
+				SubnetID: aws.String(*r.SubnetID),
+			})
 
-		if err != nil {
-			return "", nil, err
+			if err != nil {
+				if awsErr, ok := err.(awserr.Error); ok {
+					if awsErr.Code() == "DependencyViolation" {
+						// surface error but do not return
+						fmt.Fprintf(os.Stderr, "subnet error: %s\n", awsErr.Error())
+					} else {
+						// pass up other
+						return "", nil, err
+					}
+				}
+			} else {
+				// Subnet was deleted, move on
+				break
+			}
+			time.Sleep(2 * time.Second)
 		}
 	}
 
