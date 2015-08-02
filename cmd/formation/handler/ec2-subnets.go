@@ -52,7 +52,7 @@ func EC2SubnetsCreate(req Request) (string, map[string]interface{}, error) {
 	subnets := make([]string, 0, 100)
 	azs := make([]string, 0, 100)
 	for i, az := range matches {
-		resp, err := EC2(req).CreateSubnet(&ec2.CreateSubnetInput{
+		res, err := EC2(req).CreateSubnet(&ec2.CreateSubnetInput{
 			AvailabilityZone: aws.String(az),
 			CIDRBlock:        aws.String(fmt.Sprintf("10.0.%d.0/24", i)),
 			VPCID:            aws.String(vpcId),
@@ -62,7 +62,7 @@ func EC2SubnetsCreate(req Request) (string, map[string]interface{}, error) {
 			return "", nil, err
 		}
 
-		subnets = append(subnets, *resp.Subnet.SubnetID)
+		subnets = append(subnets, *res.Subnet.SubnetID)
 		azs = append(azs, az)
 	}
 
@@ -81,7 +81,7 @@ func EC2SubnetsUpdate(req Request) (string, map[string]interface{}, error) {
 }
 
 func EC2SubnetsDelete(req Request) (string, map[string]interface{}, error) {
-	resp, err := EC2(req).DescribeSubnets(&ec2.DescribeSubnetsInput{
+	res, err := EC2(req).DescribeSubnets(&ec2.DescribeSubnetsInput{
 		Filters: []*ec2.Filter{
 			{
 				Name: aws.String("vpc-id"),
@@ -96,7 +96,7 @@ func EC2SubnetsDelete(req Request) (string, map[string]interface{}, error) {
 		return "", nil, err
 	}
 
-	for _, r := range resp.Subnets {
+	for _, r := range res.Subnets {
 		_, err := EC2(req).DeleteSubnet(&ec2.DeleteSubnetInput{
 			SubnetID: aws.String(*r.SubnetID),
 		})

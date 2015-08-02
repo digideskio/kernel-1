@@ -166,6 +166,8 @@ func HandleRequest(freq Request) error {
 	switch freq.ResourceType {
 	case "Custom::EC2Subnets":
 		physical, outputs, err = HandleEC2Subnets(freq)
+	case "Custom::EC2SubnetRouteTableAssociation":
+		physical, outputs, err = HandleEC2SubnetRouteTableAssociation(freq)
 	case "Custom::ECSCluster":
 		physical, outputs, err = HandleECSCluster(freq)
 	case "Custom::ECSService":
