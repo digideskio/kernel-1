@@ -7,7 +7,7 @@ import (
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/service/s3"
 )
 
-func HandleS3BucketCleanup(req Request) (string, map[string]string, error) {
+func HandleS3BucketCleanup(req Request) (string, map[string]interface{}, error) {
 	defer recoverFailure(req)
 
 	switch req.RequestType {
@@ -28,15 +28,15 @@ func HandleS3BucketCleanup(req Request) (string, map[string]string, error) {
 	return "", nil, fmt.Errorf("unknown RequestType: %s", req.RequestType)
 }
 
-func S3BucketCleanupCreate(req Request) (string, map[string]string, error) {
+func S3BucketCleanupCreate(req Request) (string, map[string]interface{}, error) {
 	return req.ResourceProperties["Bucket"].(string) + "-Cleanup", nil, nil
 }
 
-func S3BucketCleanupUpdate(req Request) (string, map[string]string, error) {
+func S3BucketCleanupUpdate(req Request) (string, map[string]interface{}, error) {
 	return req.PhysicalResourceId, nil, nil
 }
 
-func S3BucketCleanupDelete(req Request) (string, map[string]string, error) {
+func S3BucketCleanupDelete(req Request) (string, map[string]interface{}, error) {
 	// bucket := req.ResourceProperties["Bucket"].(string)
 
 	// err := cleanupBucket(bucket, S3(req))

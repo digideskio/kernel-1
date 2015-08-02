@@ -18,7 +18,7 @@ import (
 	"github.com/convox/kernel/models"
 )
 
-func HandleECSCluster(req Request) (string, map[string]string, error) {
+func HandleECSCluster(req Request) (string, map[string]interface{}, error) {
 	defer recoverFailure(req)
 
 	switch req.RequestType {
@@ -39,7 +39,7 @@ func HandleECSCluster(req Request) (string, map[string]string, error) {
 	return "", nil, fmt.Errorf("unknown RequestType: %s", req.RequestType)
 }
 
-func HandleECSService(req Request) (string, map[string]string, error) {
+func HandleECSService(req Request) (string, map[string]interface{}, error) {
 	switch req.RequestType {
 	case "Create":
 		fmt.Println("CREATING SERVICE")
@@ -58,7 +58,7 @@ func HandleECSService(req Request) (string, map[string]string, error) {
 	return "", nil, fmt.Errorf("unknown RequestType: %s", req.RequestType)
 }
 
-func HandleECSTaskDefinition(req Request) (string, map[string]string, error) {
+func HandleECSTaskDefinition(req Request) (string, map[string]interface{}, error) {
 	switch req.RequestType {
 	case "Create":
 		fmt.Println("CREATING TASK")
@@ -77,7 +77,7 @@ func HandleECSTaskDefinition(req Request) (string, map[string]string, error) {
 	return "", nil, fmt.Errorf("unknown RequestType: %s", req.RequestType)
 }
 
-func ECSClusterCreate(req Request) (string, map[string]string, error) {
+func ECSClusterCreate(req Request) (string, map[string]interface{}, error) {
 	res, err := ECS(req).CreateCluster(&ecs.CreateClusterInput{
 		ClusterName: aws.String(req.ResourceProperties["Name"].(string)),
 	})
@@ -89,11 +89,11 @@ func ECSClusterCreate(req Request) (string, map[string]string, error) {
 	return *res.Cluster.ClusterARN, nil, nil
 }
 
-func ECSClusterUpdate(req Request) (string, map[string]string, error) {
+func ECSClusterUpdate(req Request) (string, map[string]interface{}, error) {
 	return req.PhysicalResourceId, nil, fmt.Errorf("could not update")
 }
 
-func ECSClusterDelete(req Request) (string, map[string]string, error) {
+func ECSClusterDelete(req Request) (string, map[string]interface{}, error) {
 	_, err := ECS(req).DeleteCluster(&ecs.DeleteClusterInput{
 		Cluster: aws.String(req.PhysicalResourceId),
 	})
@@ -108,7 +108,7 @@ func ECSClusterDelete(req Request) (string, map[string]string, error) {
 	return req.PhysicalResourceId, nil, nil
 }
 
-func ECSServiceCreate(req Request) (string, map[string]string, error) {
+func ECSServiceCreate(req Request) (string, map[string]interface{}, error) {
 	count, err := strconv.Atoi(req.ResourceProperties["DesiredCount"].(string))
 
 	if err != nil {
@@ -157,7 +157,7 @@ func ECSServiceCreate(req Request) (string, map[string]string, error) {
 	return *res.Service.ServiceARN, nil, nil
 }
 
-func ECSServiceUpdate(req Request) (string, map[string]string, error) {
+func ECSServiceUpdate(req Request) (string, map[string]interface{}, error) {
 	count, _ := strconv.Atoi(req.ResourceProperties["DesiredCount"].(string))
 
 	// arn:aws:ecs:us-east-1:922560784203:service/sinatra-SZXTRXEMYEY
@@ -178,7 +178,7 @@ func ECSServiceUpdate(req Request) (string, map[string]string, error) {
 	return *res.Service.ServiceARN, nil, nil
 }
 
-func ECSServiceDelete(req Request) (string, map[string]string, error) {
+func ECSServiceDelete(req Request) (string, map[string]interface{}, error) {
 	cluster := req.ResourceProperties["Cluster"].(string)
 
 	// arn:aws:ecs:us-east-1:922560784203:service/sinatra-SZXTRXEMYEY
@@ -220,7 +220,7 @@ func ECSServiceDelete(req Request) (string, map[string]string, error) {
 	return req.PhysicalResourceId, nil, nil
 }
 
-func ECSTaskDefinitionCreate(req Request) (string, map[string]string, error) {
+func ECSTaskDefinitionCreate(req Request) (string, map[string]interface{}, error) {
 	// return "", fmt.Errorf("fail")
 
 	tasks := req.ResourceProperties["Tasks"].([]interface{})
@@ -399,7 +399,7 @@ func ECSTaskDefinitionCreate(req Request) (string, map[string]string, error) {
 	return *res.TaskDefinition.TaskDefinitionARN, nil, nil
 }
 
-func ECSTaskDefinitionDelete(req Request) (string, map[string]string, error) {
+func ECSTaskDefinitionDelete(req Request) (string, map[string]interface{}, error) {
 	// We have observed a race condition quickly deregistering then re-registering
 	// Task Definitions, where the Register fails. We work around this by not
 	// deregistering any Task Definitions.

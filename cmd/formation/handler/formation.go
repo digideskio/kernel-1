@@ -50,7 +50,7 @@ type Response struct {
 	StackId           string
 	LogicalResourceId string
 
-	Data               map[string]string
+	Data               map[string]interface{}
 	PhysicalResourceId string
 	Reason             string
 	Status             string
@@ -160,12 +160,12 @@ func HandleRequest(freq Request) error {
 	defer recoverFailure(freq)
 
 	var err error
-	var outputs map[string]string
+	var outputs map[string]interface{}
 	var physical string
 
 	switch freq.ResourceType {
-	case "Custom::EC2AvailabilityZones":
-		physical, outputs, err = HandleEC2AvailabilityZones(freq)
+	case "Custom::EC2Subnets":
+		physical, outputs, err = HandleEC2Subnets(freq)
 	case "Custom::ECSCluster":
 		physical, outputs, err = HandleECSCluster(freq)
 	case "Custom::ECSService":
@@ -231,6 +231,7 @@ func putResponse(rurl string, fres Response) error {
 
 	rr, _ := ioutil.ReadAll(res.Body)
 
+	fmt.Printf("response %+v\n", fres)
 	fmt.Printf("string(rr) %+v\n", string(rr))
 
 	return nil

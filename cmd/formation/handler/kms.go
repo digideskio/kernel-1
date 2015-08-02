@@ -8,7 +8,7 @@ import (
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/service/kms"
 )
 
-func HandleKMSKey(req Request) (string, map[string]string, error) {
+func HandleKMSKey(req Request) (string, map[string]interface{}, error) {
 	defer recoverFailure(req)
 
 	switch req.RequestType {
@@ -29,7 +29,7 @@ func HandleKMSKey(req Request) (string, map[string]string, error) {
 	return "", nil, fmt.Errorf("unknown RequestType: %s", req.RequestType)
 }
 
-func KMSKeyCreate(req Request) (string, map[string]string, error) {
+func KMSKeyCreate(req Request) (string, map[string]interface{}, error) {
 	res, err := KMS(req).CreateKey(&kms.CreateKeyInput{
 		Description: aws.String(req.ResourceProperties["Description"].(string)),
 		KeyUsage:    aws.String(req.ResourceProperties["KeyUsage"].(string)),
@@ -42,11 +42,11 @@ func KMSKeyCreate(req Request) (string, map[string]string, error) {
 	return *res.KeyMetadata.ARN, nil, nil
 }
 
-func KMSKeyUpdate(req Request) (string, map[string]string, error) {
+func KMSKeyUpdate(req Request) (string, map[string]interface{}, error) {
 	return req.PhysicalResourceId, nil, fmt.Errorf("could not update")
 }
 
-func KMSKeyDelete(req Request) (string, map[string]string, error) {
+func KMSKeyDelete(req Request) (string, map[string]interface{}, error) {
 	_, err := KMS(req).DisableKey(&kms.DisableKeyInput{
 		KeyID: aws.String(req.PhysicalResourceId),
 	})
