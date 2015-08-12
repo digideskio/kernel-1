@@ -49,10 +49,9 @@ func CloudFormation(req Request) *cloudformation.CloudFormation {
 }
 
 func Lambda(req Request) *lambda.Lambda {
-	// Lambda is only supported in a subset of regions, so we do our Lambda work in us-east-1
 	return lambda.New(&aws.Config{
 		Credentials: Credentials(&req),
-		Region:      "us-east-1",
+		Region:      Region(&req),
 	})
 }
 
