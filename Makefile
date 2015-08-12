@@ -13,6 +13,7 @@ dev:
 release:
 	cd cmd/formation && make release VERSION=$(VERSION)
 	jq '.Parameters.Version.Default |= "$(VERSION)"' dist/kernel.json > /tmp/kernel.json
+	jq '.Parameters.Version.Default |= "$(VERSION)"' dist/bootstrap.json > /tmp/bootstrap.json
 	aws s3 cp /tmp/kernel.json s3://convox/release/$(VERSION)/formation.json --acl public-read
 	aws s3 cp /tmp/bootstrap.json s3://convox/release/$(VERSION)/bootstrap.json --acl public-read
 ifeq ($(LATEST),yes)
