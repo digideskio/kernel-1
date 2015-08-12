@@ -9,11 +9,11 @@
   },
   "Outputs": {
     "lambdaBridgeArn": {
-      "Value": { "Fn::GetAtt": [ "LambdaBridge", "Arn" ] }
+      "Value": { "Fn::GetAtt": [ "Bootstrap", "Arn" ] }
     }
   },
   "Resources": {
-    "LambdaBridgeRole": {
+    "BootstrapRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -41,7 +41,7 @@
         ]
       }
     },
-    "LambdaBridge": {
+    "Bootstrap": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
@@ -50,7 +50,7 @@
         },
         "Handler": "lambda.external",
         "MemorySize": "128",
-        "Role": { "Fn::GetAtt": [ "LambdaBridgeRole", "Arn" ] },
+        "Role": { "Fn::GetAtt": [ "BootstrapRole", "Arn" ] },
         "Runtime": "nodejs",
         "Timeout": "30"
       }

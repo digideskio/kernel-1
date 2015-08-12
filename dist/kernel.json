@@ -146,7 +146,7 @@
     },
     "CustomTopic" : {
       "Type": "String",
-      "Description": "Custom Resource Bridge ARN (Lambda or SNS)",
+      "Description": "Bootstrap ARN (Lambda or SNS)",
       "AllowedPattern": "arn:aws:.*",
       "ConstraintDescription": "must be an ARN"
     }
