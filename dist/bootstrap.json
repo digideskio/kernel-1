@@ -10,9 +10,6 @@
   "Outputs": {
     "Bootstrap": {
       "Value": { "Fn::GetAtt": [ "Bootstrap", "Arn" ] }
-    },
-    "BootstrapTopic": {
-      "Value": { "Ref": "BootstrapTopic" }
     }
   },
   "Resources": {
@@ -57,15 +54,6 @@
         "Runtime": "nodejs",
         "Timeout": "30"
       }
-    },
-    "BootstrapTopic": {
-       "Type": "AWS::SNS::Topic",
-       "Properties": {
-          "Subscription": [
-             { "Endpoint": { "Fn::GetAtt": [ "Bootstrap", "Arn" ] }, "Protocol": "lambda" }
-          ],
-          "TopicName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "bootstrap" ] ] }
-       }
     }
   }
 }
