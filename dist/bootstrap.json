@@ -12,7 +12,7 @@
       "Value": { "Fn::GetAtt": [ "Bootstrap", "Arn" ] }
     },
     "BootstrapTopic": {
-      "Value": { "Fn::GetAtt": [ "BootstrapTopic", "Arn" ] }
+      "Value": { "Ref": "BootstrapTopic" }
     }
   },
   "Resources": {
@@ -64,7 +64,7 @@
           "Subscription": [
              { "Endpoint": { "Fn::GetAtt": [ "Bootstrap", "Arn" ] }, "Protocol": "lambda" }
           ],
-          "TopicName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "bootstrap" ] ] },
+          "TopicName": { "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "bootstrap" ] ] }
        }
     }
   }
