@@ -17,6 +17,39 @@ import (
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/service/ecs"
 )
 
+func ClusterProperties() (int, string, error) {
+	count := 0
+	t := "unknown"
+
+	res, err := models.CloudFormation().DescribeStacks(
+		&cloudformation.DescribeStacksInput{
+			StackName: aws.String(os.Getenv("RACK")),
+		},
+	)
+
+	if err != nil {
+		return count, t, err
+	}
+
+	for _, p := range res.Stacks[0].Parameters {
+		if *p.ParameterKey == "InstanceCount" {
+			c, err := strconv.Atoi(*p.ParameterValue)
+
+			if err != nil {
+				return count, t, err
+			}
+
+			count = c
+		}
+
+		if *p.ParameterKey == "InstanceType" {
+			t = *p.ParameterValue
+		}
+	}
+
+	return count, t, nil
+}
+
 func startClusterMonitor() {
 	var log = logger.New("ns=cluster_monitor")
 
@@ -24,7 +57,7 @@ Tick:
 	for _ = range time.Tick(5 * time.Minute) {
 		log.Log("tick")
 
-		// Ger Rack InstanceCount Parameter
+		// Get Rack InstanceCount Parameter
 		instanceCount := 0
 
 		res, err := models.CloudFormation().DescribeStacks(
