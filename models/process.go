@@ -225,10 +225,18 @@ func (p *Process) Run(options ProcessRunOptions) error {
 
 	resources := app.Resources()
 
+	// old app stacks may have a single TaskDefinition resource for all app processes
+	tdr := resources["TaskDefinition"]
+
+	// new stacks will have a WorkerECSTaskDefinition resource per process
+	if val, ok := resources[UpperName(options.Process)+"ECSTaskDefinition"]; ok {
+		tdr = val
+	}
+
 	req := &ecs.RunTaskInput{
 		Cluster:        aws.String(os.Getenv("CLUSTER")),
 		Count:          aws.Long(1),
-		TaskDefinition: aws.String(resources[UpperName(options.Process)+"ECSTaskDefinition"].Id),
+		TaskDefinition: aws.String(tdr.Id),
 	}
 
 	if options.Command != "" {
