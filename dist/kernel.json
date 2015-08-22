@@ -238,6 +238,7 @@
     "CustomTopicRole": {
       "Type": "AWS::IAM::Role",
       "Condition" : "NoExternalCustomTopic",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
@@ -267,6 +268,7 @@
     "CustomTopic": {
       "Type": "AWS::Lambda::Function",
       "Condition" : "NoExternalCustomTopic",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "Code": {
           "S3Bucket": { "Fn::Join": [ "-", [ "convox", { "Ref": "AWS::Region" } ] ] },

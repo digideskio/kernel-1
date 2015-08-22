@@ -15,6 +15,7 @@
   "Resources": {
     "BootstrapRole": {
       "Type": "AWS::IAM::Role",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
@@ -43,6 +44,7 @@
     },
     "Bootstrap": {
       "Type": "AWS::Lambda::Function",
+      "DeletionPolicy": "Retain",
       "Properties": {
         "Code": {
           "S3Bucket": { "Fn::Join": [ "-", [ "convox", { "Ref": "AWS::Region" } ] ] },
