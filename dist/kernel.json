@@ -480,7 +480,7 @@
       }
     },
     "Instances": {
-      "DependsOn": [ "AvailabilityZones", "Subnet0", "Subnet1", "Subnet2" ],
+      "DependsOn": [ "AvailabilityZones", "Subnets" ],
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "LaunchConfigurationName" : { "Ref": "LaunchConfiguration" },
@@ -555,7 +555,7 @@
       }
     },
     "Balancer": {
-      "DependsOn": [ "BalancerSecurityGroup", "Subnet0", "Subnet1", "Subnet2" ],
+      "DependsOn": [ "BalancerSecurityGroup", "Subnets" ],
       "Properties": {
         "ConnectionDrainingPolicy": {
           "Enabled": true,
@@ -805,7 +805,7 @@
       "Type": "AWS::S3::Bucket"
     },
     "KernelTasks": {
-      "DependsOn": [ "Balancer", "Cluster", "CustomTopic", "DynamoBuilds", "DynamoReleases", "EncryptionKey", "KernelAccess", "Kinesis", "RegistryAccess", "RegistryBucket", "Subnet0", "Subnet1", "Subnet2", "Vpc" ],
+      "DependsOn": [ "Balancer", "Cluster", "CustomTopic", "DynamoBuilds", "DynamoReleases", "EncryptionKey", "KernelAccess", "Kinesis", "RegistryAccess", "RegistryBucket", "Subnets", "Vpc" ],
       "Properties": {
         "Name": {
           "Ref": "AWS::StackName"
