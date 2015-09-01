@@ -234,6 +234,7 @@
         "ServiceToken": { "Ref": "CustomTopic" },
         "Region": { "Ref": "AWS::Region" },
         "Vpc": { "Ref": "Vpc" }
+      }
     },
     "CustomTopicRole": {
       "Type": "AWS::IAM::Role",
