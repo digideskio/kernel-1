@@ -15,6 +15,8 @@ import (
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/service/kinesis"
 )
 
+var LogMax = 1024 * 395 // Dynamo attribute can be 400k max
+
 type Build struct {
 	Id string
 
@@ -119,12 +121,10 @@ func (b *Build) Save() error {
 	}
 
 	if b.Logs != "" {
-		logMax := 1024 * 395 // Dynamo attribute can be 400k max
-
 		logs := b.Logs
 
-		if len(logs) > logMax {
-			logs = logs[0:logMax]
+		if len(logs) > LogMax {
+			logs = logs[0:LogMax]
 		}
 
 		(*req.Item)["logs"] = &dynamodb.AttributeValue{S: aws.String(logs)}
@@ -144,7 +144,57 @@ func (b *Build) Save() error {
 
 	_, err := DynamoDB().PutItem(req)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	// update record with more of b.Logs
+	if b.Logs != "" {
+		var logs string
+		var key string
+		remainder := b.Logs
+		counter := 0
+
+		for len(remainder) > 0 {
+			if len(remainder) > LogMax {
+				logs = remainder[0:LogMax]
+				remainder = remainder[LogMax:]
+			} else {
+				logs = remainder
+				remainder = ""
+			}
+
+			// skip logs0 since it was already written as 'logs'
+			if counter > 0 {
+				key = fmt.Sprintf("logs%d", counter)
+
+				ureq := &dynamodb.UpdateItemInput{
+					Key: &map[string]*dynamodb.AttributeValue{
+						"id": &dynamodb.AttributeValue{
+							S: aws.String(b.Id),
+						},
+					},
+					TableName: aws.String(buildsTable(b.App)),
+					ExpressionAttributeValues: &map[string]*dynamodb.AttributeValue{
+						":l": &dynamodb.AttributeValue{
+							S: aws.String(logs),
+						},
+					},
+					UpdateExpression: aws.String(fmt.Sprintf("set %v = :l", key)),
+				}
+
+				_, err = DynamoDB().UpdateItem(ureq)
+
+				if err != nil {
+					return err
+				}
+			}
+
+			counter += 1
+		}
+	}
+
+	return nil
 }
 
 func (b *Build) Cleanup() error {
