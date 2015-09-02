@@ -670,7 +670,7 @@
       "Type": "AWS::EC2::SecurityGroup"
     },
     "Kernel": {
-      "DependsOn": [ "Balancer", "Cluster", "CustomTopic", "KernelTasks", "ServiceRole" ],
+      "DependsOn": [ "Balancer", "Cluster", "KernelTasks", "ServiceRole" ],
       "Type": "Custom::ECSService",
       "Version": "1.0",
       "Properties": {
@@ -796,7 +796,7 @@
       "Type": "AWS::S3::Bucket"
     },
     "KernelTasks": {
-      "DependsOn": [ "Balancer", "Cluster", "CustomTopic", "DynamoBuilds", "DynamoReleases", "EncryptionKey", "KernelAccess", "Kinesis", "RegistryAccess", "RegistryBucket", "Subnets", "Vpc" ],
+      "DependsOn": [ "Balancer", "Cluster", "DynamoBuilds", "DynamoReleases", "EncryptionKey", "KernelAccess", "Kinesis", "RegistryAccess", "RegistryBucket", "Subnets", "Vpc" ],
       "Properties": {
         "Name": {
           "Ref": "AWS::StackName"

@@ -2,11 +2,11 @@ package handler
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
-	"strconv"
-	"time"
 	"os"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/aws"
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/awslabs/aws-sdk-go/aws/awserr"
@@ -39,44 +39,70 @@ var regexMatchAvailabilityZones = regexp.MustCompile(`following availability zon
 func EC2SubnetsCreate(req Request) (string, map[string]interface{}, error) {
 	vpcId := req.ResourceProperties["Vpc"].(string)
 
-	_, err := EC2(req).CreateSubnet(&ec2.CreateSubnetInput{
-		AvailabilityZone: aws.String("garbage"),
-		CIDRBlock:        aws.String("10.200.0.0/16"),
-		VPCID:            aws.String(vpcId),
-	})
-
-	matches := regexMatchAvailabilityZones.FindStringSubmatch(err.Error())
-	matches = strings.Split(strings.Replace(matches[1], " ", "", -1), ",")
-
-	if len(matches) < 1 {
-		return "", nil, fmt.Errorf("could not discover availability zones")
-	}
-
 	outputs := make(map[string]interface{})
 	subnets := make([]string, 0, 100)
 	azs := make([]string, 0, 100)
 
-	for i, az := range matches {
-		res, err := EC2(req).CreateSubnet(&ec2.CreateSubnetInput{
-			AvailabilityZone: aws.String(az),
-			CIDRBlock:        aws.String(fmt.Sprintf("10.0.%d.0/24", i)),
+	// check for existing subnets (incase we're updating a rack)
+	res, err := EC2(req).DescribeSubnets(&ec2.DescribeSubnetsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name: aws.String("vpc-id"),
+				Values: []*string{
+					aws.String(vpcId),
+				},
+			},
+		},
+	})
+
+	if err != nil {
+		return "", nil, err
+	}
+
+	if len(res.Subnets) > 1 {
+		// populate output with existing subnets
+		for i, r := range res.Subnets {
+			subnets = append(subnets, *r.SubnetID)
+			azs = append(azs, *r.AvailabilityZone)
+			outputs["SubnetId"+strconv.Itoa(i)] = *r.SubnetID
+		}
+	} else {
+		// create subnets if none are found
+		_, err := EC2(req).CreateSubnet(&ec2.CreateSubnetInput{
+			AvailabilityZone: aws.String("garbage"),
+			CIDRBlock:        aws.String("10.200.0.0/16"),
 			VPCID:            aws.String(vpcId),
 		})
 
-		if err != nil {
-			return "", nil, err
+		matches := regexMatchAvailabilityZones.FindStringSubmatch(err.Error())
+		matches = strings.Split(strings.Replace(matches[1], " ", "", -1), ",")
+
+		if len(matches) < 1 {
+			return "", nil, fmt.Errorf("could not discover availability zones")
 		}
 
-		subnets = append(subnets, *res.Subnet.SubnetID)
-		azs = append(azs, az)
-		outputs["SubnetId" + strconv.Itoa(i)] = *res.Subnet.SubnetID
+		for i, az := range matches {
+			res, err := EC2(req).CreateSubnet(&ec2.CreateSubnetInput{
+				AvailabilityZone: aws.String(az),
+				CIDRBlock:        aws.String(fmt.Sprintf("10.0.%d.0/24", i)),
+				VPCID:            aws.String(vpcId),
+			})
+
+			if err != nil {
+				return "", nil, err
+			}
+
+			subnets = append(subnets, *res.Subnet.SubnetID)
+			azs = append(azs, az)
+			outputs["SubnetId"+strconv.Itoa(i)] = *res.Subnet.SubnetID
+		}
 	}
 
 	for i := 0; i < 10; i++ {
 		// Cloudformation makes it hard to deal with a variable number of returned elements
 		// This is a workaround to always send back 10 subnets, the template then lists SubnetId0-9 and cloudformation handles duplicates
-		if outputs["SubnetId" + strconv.Itoa(i)] == nil {
-			outputs["SubnetId" + strconv.Itoa(i)] = outputs["SubnetId0"]
+		if outputs["SubnetId"+strconv.Itoa(i)] == nil {
+			outputs["SubnetId"+strconv.Itoa(i)] = outputs["SubnetId0"]
 		}
 	}
 
