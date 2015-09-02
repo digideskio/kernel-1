@@ -164,6 +164,8 @@ func HandleRequest(freq Request) error {
 	var physical string
 
 	switch freq.ResourceType {
+	case "Custom::EC2AvailabilityZones":
+		physical, outputs, err = HandleEC2AvailabilityZones(freq)
 	case "Custom::EC2Subnets":
 		physical, outputs, err = HandleEC2Subnets(freq)
 	case "Custom::EC2SubnetRouteTableAssociation":
