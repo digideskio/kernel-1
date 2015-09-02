@@ -23,7 +23,7 @@ ifeq ($(LATEST),yes)
 endif
 
 formation: *.go
-	GOOS=linux GOARCH=amd64 go build
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.Version $(VERSION)"
 
 lambda.zip: lambda.js formation
 	zip lambda.zip lambda.js formation

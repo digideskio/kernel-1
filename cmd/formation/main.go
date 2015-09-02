@@ -9,6 +9,8 @@ import (
 	"github.com/convox/kernel/cmd/formation/handler"
 )
 
+var Version = "dev"
+
 type Message struct {
 	Records []Record
 }
@@ -34,7 +36,7 @@ type Sns struct {
 }
 
 func die(err error) {
-	fmt.Fprintf(os.Stderr, "error: %s\n", err)
+	fmt.Fprintf(os.Stderr, "version=%s error=%s\n", Version, err)
 	os.Exit(1)
 }
 
@@ -53,12 +55,12 @@ func main() {
 		die(err)
 	}
 
-	fmt.Printf("req = %+v\n", req)
+	fmt.Printf("version=%s req=%+v\n", Version, req)
 
 	err = handler.HandleRequest(req)
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "version=%s error=%s\n", Version, err)
 		return
 	}
 }
