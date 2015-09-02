@@ -231,7 +231,13 @@
       "DependsOn": [ "CustomTopic", "Vpc" ],
       "Type": "Custom::EC2AvailabilityZones",
       "Properties": {
-        "ServiceToken": { "Ref": "CustomTopic" },
+        "ServiceToken": {
+          "Fn::If": [
+            "NoExternalCustomTopic",
+            { "Fn::GetAtt": [ "CustomTopic", "Arn" ] },
+            { "Ref": "ExternalCustomTopic" }
+          ]
+        },
         "Region": { "Ref": "AWS::Region" },
         "Vpc": { "Ref": "Vpc" }
       }
