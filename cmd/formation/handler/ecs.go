@@ -90,7 +90,8 @@ func ECSClusterCreate(req Request) (string, map[string]interface{}, error) {
 }
 
 func ECSClusterUpdate(req Request) (string, map[string]interface{}, error) {
-	return req.PhysicalResourceId, nil, fmt.Errorf("could not update")
+	// nop
+	return req.PhysicalResourceId, nil, nil
 }
 
 func ECSClusterDelete(req Request) (string, map[string]interface{}, error) {

@@ -74,8 +74,8 @@ func LambdaFunctionCreate(req Request) (string, error) {
 }
 
 func LambdaFunctionUpdate(req Request) (string, error) {
-	fmt.Printf("req %+v\n", req)
-	return req.PhysicalResourceId, fmt.Errorf("could not update")
+	// nop
+	return req.PhysicalResourceId, nil
 }
 
 func LambdaFunctionDelete(req Request) (string, error) {
