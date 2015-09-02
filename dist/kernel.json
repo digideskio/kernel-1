@@ -227,21 +227,6 @@
       },
       "Type": "AWS::IAM::User"
     },
-    "AvailabilityZones": {
-      "DependsOn": [ "CustomTopic", "Vpc" ],
-      "Type": "Custom::EC2AvailabilityZones",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::If": [
-            "NoExternalCustomTopic",
-            { "Fn::GetAtt": [ "CustomTopic", "Arn" ] },
-            { "Ref": "ExternalCustomTopic" }
-          ]
-        },
-        "Region": { "Ref": "AWS::Region" },
-        "Vpc": { "Ref": "Vpc" }
-      }
-    },
     "CustomTopicRole": {
       "Type": "AWS::IAM::Role",
       "Condition" : "NoExternalCustomTopic",
@@ -486,7 +471,7 @@
       }
     },
     "Instances": {
-      "DependsOn": [ "AvailabilityZones", "Subnets" ],
+      "DependsOn": [ "Subnets" ],
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties" : {
         "LaunchConfigurationName" : { "Ref": "LaunchConfiguration" },
