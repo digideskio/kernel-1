@@ -205,6 +205,7 @@ func (r *Release) Promote() error {
 	}
 
 	app.Parameters["Environment"] = r.EnvironmentUrl()
+	app.Parameters["CustomTopic"] = CustomTopic
 	app.Parameters["Kernel"] = CustomTopic
 	app.Parameters["Release"] = r.Id
 	app.Parameters["Version"] = os.Getenv("RELEASE")
