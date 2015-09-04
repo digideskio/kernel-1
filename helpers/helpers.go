@@ -18,6 +18,7 @@ func Error(log *logger.Logger, err error) {
 	if log != nil {
 		log.Error(err)
 	}
+	fmt.Printf("error: %s\n", err)
 	rollbar.Error(rollbar.ERR, err)
 }
 
