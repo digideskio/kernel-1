@@ -64,5 +64,62 @@ func ClusterTop(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	networkIn, err := networkMetrics("NetworkIn")
+
+	if err != nil {
+		RenderError(rw, err)
+		return
+	}
+
+	networkOut, err := networkMetrics("NetworkOut")
+
+	if err != nil {
+		RenderError(rw, err)
+		return
+	}
+
 	RenderJson(rw, resp)
+}
+
+func networkMetrics(metricName string) ([]*cloudwatch.GetMetricStatisticsOutput, error) {
+	params := &cloudwatch.ListMetricsInput{
+		Namespace:  aws.String("AWS/EC2"),
+		MetricName: aws.String(metricName),
+	}
+
+	metrics, err := models.CloudWatch().ListMetrics(params)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var outputs []*cloudwatch.GetMetricStatisticsOutput
+
+	for _, metric := range metrics.Metrics {
+		params := &cloudwatch.GetMetricStatisticsInput{
+			MetricName: aws.String(*metric.MetricName),
+			StartTime:  aws.Time(time.Now().Add(-2 * time.Minute)),
+			EndTime:    aws.Time(time.Now()),
+			Period:     aws.Long(60),
+			Namespace:  aws.String(*metric.Namespace),
+			Statistics: []*string{
+				aws.String("Maximum"),
+				aws.String("Average"),
+				aws.String("Minimum"),
+			},
+			Dimensions: metric.Dimensions,
+		}
+
+		output, err := models.CloudWatch().GetMetricStatistics(params)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if output.Datapoints != nil {
+			outputs = append(outputs, output)
+		}
+	}
+
+	return outputs, nil
 }
