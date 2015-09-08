@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/codegangsta/negroni"
 	"github.com/convox/kernel/Godeps/_workspace/src/github.com/ddollar/logger"
@@ -29,26 +27,14 @@ func authenticate(rw http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	auth := r.Header.Get("Authorization")
+	_, password, ok := r.BasicAuth()
 
-	if auth == "" {
-		return authRequired(rw, "invalid authorization header")
+	if !ok {
+		return authRequired(rw, "basic authorization invalid")
 	}
 
-	if !strings.HasPrefix(auth, "Basic ") {
-		return authRequired(rw, "no basic auth")
-	}
-
-	c, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(auth, "Basic "))
-
-	if err != nil {
-		return err
-	}
-
-	parts := strings.SplitN(string(c), ":", 2)
-
-	if len(parts) != 2 || parts[1] != os.Getenv("PASSWORD") {
-		return authRequired(rw, "invalid password")
+	if password != os.Getenv("PASSWORD") {
+		return authRequired(rw, "password invalid")
 	}
 
 	return nil
